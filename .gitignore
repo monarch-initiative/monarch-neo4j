@@ -127,3 +127,20 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+
+#IDE stuff
+.idea/
+
+#MacOS DS Store
+.DS_STORE
+
+# Neo4j database data, dumps and the local
+# config file are ignored by the repository
+neo4j-data/
+dumps/*.dump
+neo4j/conf/neo4j.conf
+neo4j/certificates/bolt/private.key
+neo4j/certificates/bolt/public.crt
+neo4j/certificates/https/private.key
+neo4j/certificates/https/public.crt
