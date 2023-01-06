@@ -5,13 +5,17 @@ With suitable configuration, a Docker Compose may be used to initialize and run 
 ## Download Data
 
 We currently get the latest Monarch Neo4j data dump from 
-[here](https://data.monarchinitiative.org/monarch-kg-dev/latest/monarch-kg.neo4j.dump). The `download_monarch_scigraph_neo4j_dump.sh` (under **scripts**) can be used to download the data directly into the project's '**dumps**' folder, for subsequent loading. Optional command line arguments for the filename (default: **monarch-kg.neo4j.dump**) and the source base URL (default: **https://data.monarchinitiative.org/monarch-kg-dev/latest**) may be given, to download Neo4j data dumps from other sources.
+[here](https://data.monarchinitiative.org/monarch-kg-dev/latest/monarch-kg.neo4j.dump). 
+
+Run the `download_monarch_neo4j_dump.sh` (under **scripts**) to download the data directly into the project's '**dumps**' folder, for subsequent loading. Optional command line arguments for the filename (default: **monarch-kg.neo4j.dump**) and the source base URL (default: **https://data.monarchinitiative.org/monarch-kg-dev/latest**) may be given, to download Neo4j data dumps from other sources.
 
 ## Basic Neo4j Instance Configuration
 
 Copy the **`dot_env_template`** file (found in the root project directory) into a **`.env`** ("dot env") file. This copy of the **.env** is **.gitignore'd**.
 
-Uncomment the **`DO_LOAD=1`** in the **.env** file to trigger loading upon Docker (Compose) startup.  Note that the database is persisted in between Docker builds, within the local directory **neo4j-data** (mapped to a Docker volume) thus the **`DO_LOAD`** can be commented out or set back to zero after initial data loading. 
+Uncomment the **`DO_LOAD=1`** in the **.env** file to trigger loading upon Docker (Compose) startup.  
+
+**Note:** the Neo4j database is persisted in between Docker builds, within a Docker volume named **neo4j-data**, thus the **`DO_LOAD`** should be commented out or set back to zero after initial data loading. 
 
 Optionally, if the name of the data file you downloaded above is _**not**_ named `monarch-kg.neo4j.dump`, then uncomment the **NEO4J_DUMP_FILENAME** environment variable and set it to the actual file name (i.e. the name of the file that you downloaded into the local **dumps** folder).
 
@@ -55,7 +59,9 @@ To stop the server:
 docker-compose down
 ```
 
-The Neo4j instances with Monarch data loaded should now be visible at **http://localhost:7474**.
+The Neo4j instances with Monarch data loaded should now be visible at **http://localhost:7474**. 
+
+**Note:** if authentication is enforced, then at first access of the web browser application, the password (for user 'neo4j') is just set to 'neo4j' and the application will ask the user to reset the password. Subsequent accesses should use the new password.
 
 ## HTTPS/SSL Wrapping of the Neo4j Server Instance
 
