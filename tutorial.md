@@ -19,9 +19,6 @@ download, https://graphdatascience.ninja/neo4j-graph-data-science-2.3.0.zip, unz
 
 ## Querying
 
-### 
-  call db.schema.visualization
-
 ### Return details for a single disease
 
 Nodes in a cypher query are expressed with `()` and the basic form of a query is `MATCH (n) RETURN n`. To limit the results to just our disease of interest, we can restrict by a property, in this case the `id` property.
