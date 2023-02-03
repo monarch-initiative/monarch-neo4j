@@ -27,6 +27,7 @@ services:
       - 7687:7687  # bolt
     volumes:
       - neo4j-data:/data
+      - ./plugins:/plugins
       - ./dumps:/dumps
       - ./scripts:/scripts
       - ./neo4j/conf:/var/lib/neo4j/conf
