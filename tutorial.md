@@ -6,15 +6,11 @@
 
 https://github.com/monarch-initiative/monarch-neo4j
 
-### Download Data and plugins
+### Download Data
 
 * Download [monarch.neo4j.dump](https://data.monarchinitiative.org/monarch-kg-dev/latest/monarch-kg.neo4j.dump) from [data.monarchinitiative.org](https://data.monarchinitiative.org/monarch-kg-dev/latest/index.html) and put in the `dumps` directory
 
-* Download the [APOC plugin jar file](https://github.com/neo4j-contrib/neo4j-apoc-procedures/releases/download/4.4.0.13/apoc-4.4.0.13-all.jar) and put in the `plugins` directory
-
-* Download, the [GDS plugin](https://graphdatascience.ninja/neo4j-graph-data-science-2.3.0.zip), unzip the download and copy jar file to the `plugins` directory
-
-### Environment setup
+### Set up the environment file
 
 copy dot_env_template to .env and edit the values to look like:
 
@@ -27,6 +23,26 @@ DO_LOAD=1
 # Name of Neo4j dump file to load, assumed to be accessed from within
 # the 'dumps' internal Volume path within the Docker container
 NEO4J_DUMP_FILENAME=monarch-kg.neo4j.dump
+```
+
+That should mean uncommenting DO_LOAD and NEO4j_DUMP_FILENAME
+
+### Optional Plugin Setup
+
+<details><summary>You may wish to install additional plugins</summary>
+<p>
+
+#### Download plugins 
+
+* Download the [APOC plugin jar file](https://github.com/neo4j-contrib/neo4j-apoc-procedures/releases/download/4.4.0.13/apoc-4.4.0.13-all.jar) and put in the `plugins` directory
+
+* Download, the [GDS plugin](https://graphdatascience.ninja/neo4j-graph-data-science-2.3.0.zip), unzip the download and copy jar file to the `plugins` directory
+
+#### Environment setup
+
+In addition to the changes above to .env, you will need to uncomment the following lines in the .env file:
+
+```
 
 NEO4J_apoc_export_file_enabled=true
 NEO4J_apoc_import_file_enabled=true
@@ -35,7 +51,8 @@ NEO4JLABS_PLUGINS=\[\"apoc\", \"graph-data-science\"\]
 
 ```
 
-That should mean uncommenting DO_LOAD, NEO4j_DUMP_FILENAME, and the plugin lines below.
+</p>
+</details>
 
 ## Querying
 
