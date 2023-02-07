@@ -2,6 +2,10 @@
 
 ## Running locally (your very own Monarch Graph)
 
+The new Monarch Knowledge Graph has a more streamlined focus on the core Monarch data model, centering on Diseases, Phenotypes and Genes and the associations between them. This has the benefit of being a graph that can be build in 2 hours instead of 2 days, and that you can run locally on your laptop.
+
+> Note: As of the writing of this tutorial, (Feb 2023), the graph is just starting to move from its initial construction phrase into real use, and so there are still bugs to find. Some of which show up in this tutorial. 
+
 ### Check out the repository
 
 https://github.com/monarch-initiative/monarch-neo4j
@@ -307,6 +311,115 @@ MATCH (d:`biolink:Disease`)-[rel]-(d2:`biolink:Disease`) RETURN DISTINCT type(re
 We'll construct a query that fixes the super class disease, then connects at any distance to any subclass of that disease, and then brings genes that affect risk for those diseases. To avoid a big hairball graph being returned, we can return the results as a table showing the diseases and genes. 
 
 ```cypher
-MATCH (d:`biolink:Disease`{id:"MONDO:0002409"})<-[:`biolink:subclass_of`*]-(d2:`biolink:Disease`)<-[`biolink:risk_affected_by`]-(g:`biolink:Gene`) RETURN d.id, d.name,d2.id, d2.name,g.symbol,g.id
+MATCH (d:`biolink:Disease`{id:"MONDO:0002409"})<-[:`biolink:subclass_of`*]-(d2:`biolink:Disease`)<-[`biolink:risk_affected_by`]-(g:`biolink:Gene`) RETURN d.id, d.name, d2.id, d2.name,g.symbol,g.id
 ```    
 
+once you trust the query, you can also use the DISTINCT keyword again focus in on just the gene list
+    
+```cypher
+MATCH (d:`biolink:Disease`{id:"MONDO:0002409"})<-[:`biolink:subclass_of`*]-(d2:`biolink:Disease`)<-[`biolink:risk_affected_by`]-(g:`biolink:Gene`) RETURN DISTINCT g.id
+```
+
+### Gene to Gene Associations
+
+First, we can ask what kind of associations we have between genes.
+
+```cypher
+MATCH (g:`biolink:Gene`)-[rel]->(g2:`biolink:Gene`) RETURN DISTINCT type(rel)
+```
+
+```
+╒════════════════════════════════════════╕
+│"type(rel)"                             │
+╞════════════════════════════════════════╡
+│"biolink:orthologous_to"                │
+├────────────────────────────────────────┤
+│"biolink:interacts_with"                │
+├────────────────────────────────────────┤
+│"biolink:risk_affected_by"              │
+├────────────────────────────────────────┤
+│"biolink:gene_associated_with_condition"│
+└────────────────────────────────────────┘
+```
+
+> Again, please ignore `biolink:gene_associated_with_condition` and `biolink:risk_affected_by`. 
+
+Let's say that from the list above, we're super interested in the DIABLO gene, because, obviously, it has a cool name. We can find it's orthologues by querying through the `biolink:orthologous_to` relationship.
+
+```cypher
+MATCH (g {id:"HGNC:21528"})-[:`biolink:orthologous_to`]-(o:`biolink:Gene`) RETURN g,o 
+```
+
+We can then make the question more interesting, by finding phenotypes associated with these orthologues.
+
+```cypher
+MATCH (g {id:"HGNC:21528"})-[:`biolink:orthologous_to`]-(og:`biolink:Gene`)-[:`biolink:has_phenotype`]->(p) RETURN g,og,p
+```
+
+That was a dead end. What about gene expression? 
+
+```cypher
+MATCH (g {id:"HGNC:21528"})-[:`biolink:orthologous_to`]-(og:`biolink:Gene`)-[:`biolink:expressed_in`]->(a) RETURN g,og,a
+```
+
+We can add this one step further by connecting our gene expression list in UBERON terms 
+
+```cypher
+MATCH (g {id:"HGNC:21528"})-[:`biolink:orthologous_to`]-(og:`biolink:Gene`)-[:`biolink:expressed_in`]->(a)-[`biolink:subclass_of`]-(u) 
+WHERE u.id STARTS WITH 'UBERON:'
+RETURN distinct u.id, u.name
+```
+
+In particular, it's a nice confirmation to see that we started at the high level MONDO term "inherited auditory system disease", passed through subclass relationships to more specific diseases, connected to genes that affect risk for those diseases, focused on a single gene, and were able to find that it is expressed in the cochlea.
+
+```
+╒════════════════╤════════════════════════════════╕
+│"u.id"          │"u.name"                        │
+╞════════════════╪════════════════════════════════╡
+│"UBERON:0000044"│"dorsal root ganglion"          │
+├────────────────┼────────────────────────────────┤
+│"UBERON:0000151"│"pectoral fin"                  │
+├────────────────┼────────────────────────────────┤
+│"UBERON:0000948"│"heart"                         │
+├────────────────┼────────────────────────────────┤
+│"UBERON:0000961"│"thoracic ganglion"             │
+├────────────────┼────────────────────────────────┤
+│"UBERON:0001017"│"central nervous system"        │
+├────────────────┼────────────────────────────────┤
+│"UBERON:0001555"│"digestive tract"               │
+├────────────────┼────────────────────────────────┤
+│"UBERON:0001675"│"trigeminal ganglion"           │
+├────────────────┼────────────────────────────────┤
+│"UBERON:0001700"│"geniculate ganglion"           │
+├────────────────┼────────────────────────────────┤
+│"UBERON:0001701"│"glossopharyngeal ganglion"     │
+├────────────────┼────────────────────────────────┤
+│"UBERON:0001844"│"cochlea"                       │
+├────────────────┼────────────────────────────────┤
+│"UBERON:0001991"│"cervical ganglion"             │
+├────────────────┼────────────────────────────────┤
+│"UBERON:0002107"│"liver"                         │
+├────────────────┼────────────────────────────────┤
+│"UBERON:0002441"│"cervicothoracic ganglion"      │
+├────────────────┼────────────────────────────────┤
+│"UBERON:0003060"│"pronephric duct"               │
+├────────────────┼────────────────────────────────┤
+│"UBERON:0003922"│"pancreatic epithelial bud"     │
+├────────────────┼────────────────────────────────┤
+│"UBERON:0004141"│"heart tube"                    │
+├────────────────┼────────────────────────────────┤
+│"UBERON:0004291"│"heart rudiment"                │
+├────────────────┼────────────────────────────────┤
+│"UBERON:0005426"│"lens vesicle"                  │
+├────────────────┼────────────────────────────────┤
+│"UBERON:0007269"│"pectoral appendage musculature"│
+├────────────────┼────────────────────────────────┤
+│"UBERON:0019249"│"2-cell stage embryo"           │
+├────────────────┼────────────────────────────────┤
+│"UBERON:0000965"│"lens of camera-type eye"       │
+├────────────────┼────────────────────────────────┤
+│"UBERON:0001645"│"trigeminal nerve"              │
+├────────────────┼────────────────────────────────┤
+│"UBERON:0003082"│"myotome"                       │
+└────────────────┴────────────────────────────────┘
+```
