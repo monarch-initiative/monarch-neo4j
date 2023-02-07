@@ -8,14 +8,34 @@ https://github.com/monarch-initiative/monarch-neo4j
 
 ### Download Data and plugins
 
-Download [monarch.neo4j.dump](https://data.monarchinitiative.org/monarch-kg-dev/latest/monarch-kg.neo4j.dump) from https://data.monarchinitiative.org/monarch-kg-dev/latest/index.html and put in the `dumps` directory
+* Download [monarch.neo4j.dump](https://data.monarchinitiative.org/monarch-kg-dev/latest/monarch-kg.neo4j.dump) from [data.monarchinitiative.org](https://data.monarchinitiative.org/monarch-kg-dev/latest/index.html) and put in the `dumps` directory
 
-download https://github.com/neo4j-contrib/neo4j-apoc-procedures/releases/download/4.4.0.13/apoc-4.4.0.13-all.jar
-and put in the `plugins` directory
+* Download the [APOC plugin jar file](https://github.com/neo4j-contrib/neo4j-apoc-procedures/releases/download/4.4.0.13/apoc-4.4.0.13-all.jar) and put in the `plugins` directory
 
-download, https://graphdatascience.ninja/neo4j-graph-data-science-2.3.0.zip, unzip and copy jar file to the `plugins` directory
+* Download, the [GDS plugin](https://graphdatascience.ninja/neo4j-graph-data-science-2.3.0.zip), unzip the download and copy jar file to the `plugins` directory
 
-## (maybe) shared neo4j portal ?
+### Environment setup
+
+copy dot_env_template to .env and edit the values to look like:
+
+```
+# This Environment Variable file is referenced by the docker-compose.yaml build
+
+# Set this variable to '1' to trigger an initial loading of a Neo4j dump
+DO_LOAD=1
+
+# Name of Neo4j dump file to load, assumed to be accessed from within
+# the 'dumps' internal Volume path within the Docker container
+NEO4J_DUMP_FILENAME=monarch-kg.neo4j.dump
+
+NEO4J_apoc_export_file_enabled=true
+NEO4J_apoc_import_file_enabled=true
+NEO4J_apoc_import_file_use__neo4j__config=true
+NEO4JLABS_PLUGINS=\[\"apoc\", \"graph-data-science\"\]
+
+```
+
+That should mean uncommenting DO_LOAD, NEO4j_DUMP_FILENAME, and the plugin lines below.
 
 ## Querying
 
@@ -100,7 +120,176 @@ Expanding on the query above, we can also return the type of relationship connec
 MATCH (g:`biolink:Gene`)-[rel]->(n) RETURN DISTINCT type(rel), labels(n)
 ```
 
+Which returns tabular data like:
+
+```
+╒════════════════════════════════════════════════════╤═══════════════════════════════════════════════════════════╕
+│"type(rel)"                                         │"labels(n)"                                                │
+╞════════════════════════════════════════════════════╪═══════════════════════════════════════════════════════════╡
+│"biolink:located_in"                                │["biolink:NamedThing","biolink:CellularComponent"]         │
+├────────────────────────────────────────────────────┼───────────────────────────────────────────────────────────┤
+│"biolink:part_of"                                   │["biolink:NamedThing","biolink:MacromolecularComplexMixin"]│
+├────────────────────────────────────────────────────┼───────────────────────────────────────────────────────────┤
+│"biolink:acts_upstream_of_or_within"                │["biolink:NamedThing","biolink:Occurrent"]                 │
+├────────────────────────────────────────────────────┼───────────────────────────────────────────────────────────┤
+│"biolink:enables"                                   │["biolink:NamedThing","biolink:Occurrent"]                 │
+├────────────────────────────────────────────────────┼───────────────────────────────────────────────────────────┤
+│"biolink:actively_involved_in"                      │["biolink:NamedThing","biolink:Occurrent"]                 │
+├────────────────────────────────────────────────────┼───────────────────────────────────────────────────────────┤
+│"biolink:colocalizes_with"                          │["biolink:NamedThing","biolink:CellularComponent"]         │
+├────────────────────────────────────────────────────┼───────────────────────────────────────────────────────────┤
+│"biolink:active_in"                                 │["biolink:NamedThing","biolink:CellularComponent"]         │
+├────────────────────────────────────────────────────┼───────────────────────────────────────────────────────────┤
+│"biolink:acts_upstream_of_or_within"                │["biolink:NamedThing","biolink:Pathway"]                   │
+├────────────────────────────────────────────────────┼───────────────────────────────────────────────────────────┤
+│"biolink:actively_involved_in"                      │["biolink:NamedThing","biolink:Pathway"]                   │
+├────────────────────────────────────────────────────┼───────────────────────────────────────────────────────────┤
+│"biolink:contributes_to"                            │["biolink:NamedThing","biolink:Occurrent"]                 │
+├────────────────────────────────────────────────────┼───────────────────────────────────────────────────────────┤
+│"biolink:orthologous_to"                            │["biolink:NamedThing","biolink:Gene"]                      │
+├────────────────────────────────────────────────────┼───────────────────────────────────────────────────────────┤
+│"biolink:participates_in"                           │["biolink:NamedThing","biolink:Pathway"]                   │
+├────────────────────────────────────────────────────┼───────────────────────────────────────────────────────────┤
+│"biolink:interacts_with"                            │["biolink:NamedThing","biolink:Gene"]                      │
+├────────────────────────────────────────────────────┼───────────────────────────────────────────────────────────┤
+│"biolink:has_phenotype"                             │["biolink:NamedThing","biolink:GeneticInheritance"]        │
+├────────────────────────────────────────────────────┼───────────────────────────────────────────────────────────┤
+│"biolink:has_phenotype"                             │["biolink:NamedThing","biolink:PhenotypicQuality"]         │
+├────────────────────────────────────────────────────┼───────────────────────────────────────────────────────────┤
+│"biolink:risk_affected_by"                          │["biolink:NamedThing","biolink:Disease"]                   │
+├────────────────────────────────────────────────────┼───────────────────────────────────────────────────────────┤
+│"biolink:gene_associated_with_condition"            │["biolink:NamedThing","biolink:Disease"]                   │
+├────────────────────────────────────────────────────┼───────────────────────────────────────────────────────────┤
+│"biolink:has_phenotype"                             │["biolink:NamedThing","biolink:ClinicalModifier"]          │
+├────────────────────────────────────────────────────┼───────────────────────────────────────────────────────────┤
+│"biolink:acts_upstream_of_positive_effect"          │["biolink:NamedThing","biolink:Occurrent"]                 │
+├────────────────────────────────────────────────────┼───────────────────────────────────────────────────────────┤
+│"biolink:acts_upstream_of"                          │["biolink:NamedThing","biolink:Occurrent"]                 │
+├────────────────────────────────────────────────────┼───────────────────────────────────────────────────────────┤
+│"biolink:risk_affected_by"                          │["biolink:NamedThing","biolink:Gene"]                      │
+├────────────────────────────────────────────────────┼───────────────────────────────────────────────────────────┤
+│"biolink:gene_associated_with_condition"            │["biolink:NamedThing","biolink:Gene"]                      │
+├────────────────────────────────────────────────────┼───────────────────────────────────────────────────────────┤
+│"biolink:acts_upstream_of_or_within_positive_effect"│["biolink:NamedThing","biolink:Occurrent"]                 │
+├────────────────────────────────────────────────────┼───────────────────────────────────────────────────────────┤
+│"biolink:has_mode_of_inheritance"                   │["biolink:NamedThing","biolink:GeneticInheritance"]        │
+├────────────────────────────────────────────────────┼───────────────────────────────────────────────────────────┤
+│"biolink:acts_upstream_of_negative_effect"          │["biolink:NamedThing","biolink:Occurrent"]                 │
+├────────────────────────────────────────────────────┼───────────────────────────────────────────────────────────┤
+│"biolink:acts_upstream_of"                          │["biolink:NamedThing","biolink:Pathway"]                   │
+├────────────────────────────────────────────────────┼───────────────────────────────────────────────────────────┤
+│"biolink:acts_upstream_of_positive_effect"          │["biolink:NamedThing","biolink:Pathway"]                   │
+├────────────────────────────────────────────────────┼───────────────────────────────────────────────────────────┤
+│"biolink:acts_upstream_of_or_within_negative_effect"│["biolink:NamedThing","biolink:Occurrent"]                 │
+├────────────────────────────────────────────────────┼───────────────────────────────────────────────────────────┤
+│"biolink:has_phenotype"                             │["biolink:NamedThing","biolink:PhenotypicFeature"]         │
+├────────────────────────────────────────────────────┼───────────────────────────────────────────────────────────┤
+│"biolink:acts_upstream_of_or_within_negative_effect"│["biolink:NamedThing","biolink:Pathway"]                   │
+├────────────────────────────────────────────────────┼───────────────────────────────────────────────────────────┤
+│"biolink:acts_upstream_of_or_within_positive_effect"│["biolink:NamedThing","biolink:Pathway"]                   │
+├────────────────────────────────────────────────────┼───────────────────────────────────────────────────────────┤
+│"biolink:expressed_in"                              │["biolink:NamedThing","biolink:GrossAnatomicalStructure"]  │
+├────────────────────────────────────────────────────┼───────────────────────────────────────────────────────────┤
+│"biolink:expressed_in"                              │["biolink:NamedThing","biolink:AnatomicalEntity"]          │
+├────────────────────────────────────────────────────┼───────────────────────────────────────────────────────────┤
+│"biolink:acts_upstream_of_negative_effect"          │["biolink:NamedThing","biolink:Pathway"]                   │
+├────────────────────────────────────────────────────┼───────────────────────────────────────────────────────────┤
+│"biolink:expressed_in"                              │["biolink:NamedThing","biolink:Cell"]                      │
+├────────────────────────────────────────────────────┼───────────────────────────────────────────────────────────┤
+│"biolink:located_in"                                │["biolink:NamedThing","biolink:MacromolecularComplexMixin"]│
+├────────────────────────────────────────────────────┼───────────────────────────────────────────────────────────┤
+│"biolink:expressed_in"                              │["biolink:NamedThing","biolink:CellularComponent"]         │
+├────────────────────────────────────────────────────┼───────────────────────────────────────────────────────────┤
+│"biolink:expressed_in"                              │["biolink:NamedThing","biolink:MacromolecularComplexMixin"]│
+├────────────────────────────────────────────────────┼───────────────────────────────────────────────────────────┤
+│"biolink:part_of"                                   │["biolink:NamedThing","biolink:CellularComponent"]         │
+├────────────────────────────────────────────────────┼───────────────────────────────────────────────────────────┤
+│"biolink:expressed_in"                              │["biolink:NamedThing"]                                     │
+└────────────────────────────────────────────────────┴───────────────────────────────────────────────────────────┘
+
+```
+
+
 > Note: the DISTINCT keyword will only remove duplicate results if the entire result is the same. In this case, we're interested in the unique combinations of relationship type and node category.
 
+### Kinds of associations between two entity types
 
+Further constraining on the type of the connecting node, we can ask what kinds of associations exist between two entity types. For example, what kinds of associations exist between genes and diseases?
+
+```cypher
+MATCH (g:`biolink:Gene`)-[rel]->(n:`biolink:Disease`) RETURN DISTINCT type(rel)
+```
+
+```
+╒════════════════════════════════════════╕
+│"type(rel)"                             │
+╞════════════════════════════════════════╡
+│"biolink:gene_associated_with_condition"│
+├────────────────────────────────────────┤
+│"biolink:risk_affected_by"              │
+└────────────────────────────────────────┘
+```
+
+
+### Diseases associated with a gene
+
+```cypher
+MATCH (g:`biolink:Gene`{id:"HGNC:1100"})-[]-(d:`biolink:Disease`) RETURN g,d
+```
+
+### Phenotypes associated with diseases associated with a gene
+
+```cypher
+MATCH (g:`biolink:Gene`{id:"HGNC:1100"})-[]->(d:`biolink:Disease`)-[]->(p:`biolink:PhenotypicFeature`) RETURN g,d,p
+```
+
+Why doesn't this return results?  This is a great opportunity to track down an unexpected problem. 
+
+First, try a less constrained query, so that the 3rd node can be anything:
+
+```cypher
+MATCH (g:`biolink:Gene`{id:"HGNC:1100"})-[]->(d:`biolink:Disease`)-[]->(p) RETURN g,d,p
+```
+
+With a little tugging and stretching, a good picture emerges, and by clicking our phenotype bubbles, they look like they're showing as PhenotypicQuality rather than PhenotypicFeature. This is likely a bug, but a sensible alternative for this same intent might be:
+
+```cypher
+MATCH (g:`biolink:Gene`{id:"HGNC:1100"})-[]->(d:`biolink:Disease`)-[:`biolink:has_phenotype`]->(p) RETURN g,d,p
+```
+
+### Recursive traversal
+
+Sometimes, we don't know the specific number of hops. What if we want to answer the question "What genes affect the risk for an inherited auditory system disease?" 
+
+First, lets find out how are diseases connected to one another. Name the relationship to query for just the predicates.
+```
+MATCH (d:`biolink:Disease`)-[rel]-(d2:`biolink:Disease`) RETURN DISTINCT type(rel)
+```
+
+```
+╒════════════════════════════════════════╕
+│"type(rel)"                             │
+╞════════════════════════════════════════╡
+│"biolink:subclass_of"                   │
+├────────────────────────────────────────┤
+│"biolink:related_to"                    │
+├────────────────────────────────────────┤
+│"biolink:associated_with"               │
+├────────────────────────────────────────┤
+│"biolink:has_phenotype"                 │
+├────────────────────────────────────────┤
+│"biolink:gene_associated_with_condition"│
+├────────────────────────────────────────┤
+│"biolink:risk_affected_by"              │
+└────────────────────────────────────────┘
+```
+
+(* Please ignore `biolink:gene_associated_with_condition` and `biolink:risk_affected_by` showing up here, those are due to a bug in our OMIM ingest)
+
+
+We'll construct a query that fixes the super class disease, then connects at any distance to any subclass of that disease, and then brings genes that affect risk for those diseases. To avoid a big hairball graph being returned, we can return the results as a table showing the diseases and genes. 
+
+```cypher
+MATCH (d:`biolink:Disease`{id:"MONDO:0002409"})<-[:`biolink:subclass_of`*]-(d2:`biolink:Disease`)<-[`biolink:risk_affected_by`]-(g:`biolink:Gene`) RETURN d.id, d.name,d2.id, d2.name,g.symbol,g.id
+```    
 
