@@ -58,6 +58,14 @@ NEO4JLABS_PLUGINS=\[\"apoc\", \"graph-data-science\"\]
 </p>
 </details>
 
+## Start Neo4j
+
+On the command line, from the root of the monarch-neo4j repository you can launch the neo4j with:
+
+```
+docker-compose up
+```
+
 ## Querying
 
 ### Return details for a single disease
