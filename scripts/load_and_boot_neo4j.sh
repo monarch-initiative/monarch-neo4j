@@ -1,7 +1,7 @@
 #!/bin/bash
 
 NEO4J_DATABASE=${1:-monarch-kg}
-NEO4J_DUMP_FILENAME=${1:-$NEO4J_DATABASE.neo4j.dump}
+NEO4J_DUMP_FILENAME=${1:-${NEO4J_DATABASE}.neo4j.dump}
 
 [ ! -z ${DO_LOAD} ] && \
     echo "Loading Neo4j dump file '$NEO4J_DUMP_FILENAME' into database '$NEO4J_DATABASE'" && \
