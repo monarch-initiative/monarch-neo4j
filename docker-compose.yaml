@@ -19,7 +19,8 @@ services:
   #      - neo4j
 
   neo4j:
-    image: neo4j:4.4
+    image: us-central1-docker.pkg.dev/monarch-initiative/monarch-api/monarch-neo4j:4.4
+    build: .
     env_file:
       - .env
     ports:
@@ -29,7 +30,7 @@ services:
       - neo4j-data:/data
       - ./plugins:/plugins
       - ./dumps:/dumps
-      - ./scripts:/scripts
-      - ./neo4j/conf:/var/lib/neo4j/conf
     # NEO4J_DUMP_FILENAME can be defined within the .env file
+    # (in fact, it needs to be defined for this file to parse, e.g. to use
+    # `docker compose build` or any other compose command)
     entrypoint: /scripts/load_and_boot_neo4j.sh $NEO4J_DUMP_FILENAME
