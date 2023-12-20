@@ -20,6 +20,7 @@ services:
 
   neo4j:
     image: us-central1-docker.pkg.dev/monarch-initiative/monarch-api/monarch-neo4j:4.4
+    platform: linux/amd64
     build: .
     env_file:
       - .env
